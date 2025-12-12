@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const axios = require('axios');
 const admin = require('firebase-admin');
 const express = require('express');
@@ -12,7 +14,7 @@ const API_URLS = {
   EMSC: 'https://www.seismicportal.eu/fdsnws/event/1/query?limit=50&format=json'
 };
 
-const SERVICE_ACCOUNT_KEY = 'serviceAccountKey.json';
+const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
 const POLLING_INTERVAL = 10000; // 10 saniye
 const DEDUP_TIME_WINDOW = 5 * 60 * 1000; // 5 dakika (milisaniye)
 const DEDUP_DISTANCE_RADIUS = 50; // 50 km (100 km çap için)
@@ -37,16 +39,31 @@ const COLORS = {
 let firebaseApp;
 let db;
 try {
-  const serviceAccount = require(`./${SERVICE_ACCOUNT_KEY}`);
+  // Önce dosyanın var olup olmadığını kontrol et
+  if (!fs.existsSync(serviceAccountPath)) {
+    throw new Error(`Service account dosyası bulunamadı: ${serviceAccountPath}`);
+  }
+  
+  // Dosya varsa başlat
+  const serviceAccount = require(serviceAccountPath);
   firebaseApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
   db = admin.firestore();
+  console.log("✅ Firebase başarıyla bağlandı!");
   console.log(`${COLORS.SUCCESS}✓ Firebase Admin SDK başarıyla başlatıldı.${COLORS.RESET}`);
   console.log(`${COLORS.SUCCESS}✓ Firestore başarıyla başlatıldı.${COLORS.RESET}`);
 } catch (error) {
+  console.error("❌ Firebase BAŞLATILAMADI:", error.message);
   console.error(`${COLORS.ERROR}✗ Firebase başlatma hatası:${COLORS.RESET} ${error.message}`);
   console.error(`${COLORS.WARNING}⚠ FCM bildirimleri ve Firestore işlemleri gönderilemeyecek, ancak uygulama çalışmaya devam edecek.${COLORS.RESET}`);
+  
+  // Hata durumunda klasördeki dosyaları listele (Debug için)
+  try {
+    console.log("📂 Klasördeki dosyalar:", fs.readdirSync(__dirname));
+  } catch (dirError) {
+    console.error(`📂 Klasör okuma hatası: ${dirError.message}`);
+  }
 }
 
 // ============================================
@@ -446,7 +463,10 @@ app.get('/api/depremler', async (req, res) => {
   try {
     if (!db) {
       console.error(`${COLORS.ERROR}✗ Firestore başlatılmadığı için veri getirilemedi.${COLORS.RESET}`);
-      res.status(500).json({ error: 'Firestore başlatılmadı' });
+      res.status(500).json({ 
+        error: 'Firestore başlatılmadı',
+        details: 'Firestore veritabanı bağlantısı kurulamadı. Lütfen sunucu loglarını kontrol edin.'
+      });
       return;
     }
 
@@ -476,7 +496,12 @@ app.get('/api/depremler', async (req, res) => {
     res.json(results);
   } catch (error) {
     console.error(`${COLORS.ERROR}✗ API endpoint hatası:${COLORS.RESET} ${error.message}`);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error(`${COLORS.ERROR}✗ Hata detayı:${COLORS.RESET}`, error.stack);
+    res.status(500).json({ 
+      error: 'Sunucu hatası',
+      details: error.message,
+      message: 'Deprem verileri alınırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+    });
   }
 });
 
