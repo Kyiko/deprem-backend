@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "properties": {
+    "mag": 2.5,
+    "place": "15 km NW of Fillmore, California",
+    "time": 1765477262631,
+    "updated": 1765478828664,
+    "tz": null,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ru7s",
+    "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000ru7s.geojson",
+    "felt": 0,
+    "cdi": 1,
+    "mmi": null,
+    "alert": null,
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 96,
+    "net": "us",
+    "code": "6000ru7s",
+    "ids": ",ci41349576,us6000ru7s,",
+    "sources": ",ci,us,",
+    "types": ",dyfi,focal-mechanism,nearby-cities,origin,phase-data,scitech-link,",
+    "nst": 43,
+    "dmin": 0.087,
+    "rms": 0.94,
+    "gap": 23,
+    "magType": "ml",
+    "type": "earthquake",
+    "title": "M 2.5 - 15 km NW of Fillmore, California"
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -119.0138,
+      34.5132,
+      10
+    ]
+  },
+  "id": "us6000ru7s"
+}
